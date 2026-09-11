@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    body { font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    ::selection { background: #67e8f9; color: #08111f; }
+    a, button { transition: color .2s ease, background-color .2s ease, border-color .2s ease, transform .2s ease; }
+}
+
+@layer components {
+    .admin-shell { --admin-root-color: #000000; color: var(--admin-root-color); }
+    .admin-shell main, .admin-shell main p, .admin-shell main h1, .admin-shell main h2, .admin-shell main h3, .admin-shell main label { color: var(--admin-root-color); }
+    .admin-shell main .text-white { color: #ffffff; }
+    .admin-shell main .text-slate-400, .admin-shell main .text-slate-500, .admin-shell main .text-slate-600, .admin-shell main .text-slate-700 { color: #000000; }
+    .admin-nav-item { @apply mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-slate-400; }
+    .admin-nav-item:hover { @apply bg-white/[.06] text-white; }
+    .admin-nav-item.active { @apply bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30; }
+    .admin-card { @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_8px_30px_rgba(15,23,42,.05)]; overflow-x: auto; }
+    .admin-profile { color: #000000; }
+    .admin-profile.max-w-3xl { max-width: none; }
+    .admin-profile h1, .admin-profile h2 { color: #000000; }
+    .admin-profile section { @apply border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,.04)]; }
+    .admin-profile input, .admin-profile textarea { @apply border-slate-200 bg-slate-50 text-slate-800 placeholder:text-slate-400; }
+    .admin-profile input:focus, .admin-profile textarea:focus { @apply bg-white ring-2 ring-sky-100; }
+    .admin-profile label { color: #000000; }
+}
+
+@layer base {
+    :focus-visible { outline: 3px solid #38bdf8; outline-offset: 3px; }
+    button, a, input, select, textarea { touch-action: manipulation; }
+    @media (max-width: 640px) { table { min-width: 680px; } }
+}
+
+@layer base {
+    .public-shell { transition: background-color .2s ease, color .2s ease; }
+    .theme-light .public-shell { background: #f8fafc; color: #0f172a; }
+    .theme-light .public-shell .public-header { background: rgba(248,250,252,.94); border-color: #e2e8f0; }
+    .theme-light .public-shell .text-white { color: #0f172a; }
+    .theme-light .public-shell .text-white\/50, .theme-light .public-shell .text-white\/55, .theme-light .public-shell .text-white\/60, .theme-light .public-shell .text-white\/70 { color: #475569; }
+    .theme-light .public-shell .bg-white\/\[\.03\], .theme-light .public-shell .bg-white\/\[\.05\] { background-color: #ffffff; }
+    .theme-light .public-shell footer { background: #e2e8f0; border-color: #cbd5e1; }
+    .theme-light .theme-toggle { border-color: #cbd5e1; color: #334155; }
+}

@@ -1,0 +1,4 @@
+@extends('layouts.portfolio')
+@section('content')
+<section class="mx-auto max-w-xl px-6 py-24"><h1 class="text-4xl font-bold text-white">Sign in</h1><form method="POST" action="{{ route('login.store') }}" class="mt-8 space-y-5">@csrf @foreach([['email','Email','email'],['password','Password','password']] as [$name,$label,$type])<label class="block text-sm text-white/70">{{ $label }}<input required name="{{ $name }}" type="{{ $type }}" class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white">@error($name)<span class="text-xs text-red-400">{{ $message }}</span>@enderror</label>@endforeach<button class="rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white">Sign in</button></form><p class="mt-6 text-sm text-white/60">New here? <a class="text-orange-400" href="{{ route('register') }}">Create an account</a></p></section>
+@endsection
