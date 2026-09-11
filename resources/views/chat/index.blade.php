@@ -100,7 +100,8 @@
                 @endunless
                 <div class="group max-w-[68%]">
                     <div class="rounded-[20px] px-4 py-2 {{ $own ? 'rounded-br-md bg-blue-500 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900' }}">
-                        <p class="whitespace-pre-wrap text-[15px] leading-snug">{{ $message->message }}</p>
+                        @if($message->type === 'image' && $message->file_path)<img src="{{ asset('storage/'.$message->file_path) }}" alt="Shared image" class="mb-2 max-h-72 rounded-xl object-cover">@endif
+                        @if($message->message)<p class="whitespace-pre-wrap text-[15px] leading-snug">{{ $message->message }}</p>@endif
                     </div>
                     <time class="mt-1 block px-1 text-[11px] text-slate-400 opacity-0 transition group-hover:opacity-100 {{ $own ? 'text-right' : '' }}">
                         {{ $message->created_at->format('H:i') }}@if($own) · Sent ✓@endif
@@ -110,18 +111,18 @@
         @endforeach
     </div>
 
-    <form id="send-form" method="POST" action="{{ route('chat.messages.send', $conversation) }}" class="flex items-end gap-2 border-t border-slate-200 px-4 py-3">
+    <form id="send-form" method="POST" enctype="multipart/form-data" action="{{ route('chat.messages.send', $conversation) }}" class="flex items-end gap-2 border-t border-slate-200 px-4 py-3">
         @csrf
-        <button type="button" class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-blue-500 transition hover:bg-slate-100" aria-label="Attach">
+        <label class="grid h-10 w-10 shrink-0 cursor-pointer place-items-center rounded-full text-blue-500 transition hover:bg-slate-100" aria-label="Attach"><input id="attachment" type="file" name="attachment" accept="image/png,image/jpeg,image/gif,image/webp" class="hidden">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-        </button>
+        </label><button type="button" id="emoji-button" class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-xl text-blue-500 transition hover:bg-slate-100" aria-label="Emoji">☺</button>
         <div class="flex flex-1 items-end rounded-3xl bg-slate-100 px-4 py-2">
-            <textarea name="message" required rows="1" class="max-h-32 min-w-0 flex-1 resize-none bg-transparent py-1 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none" placeholder="Aa"></textarea>
+            <textarea name="message" rows="1" class="max-h-32 min-w-0 flex-1 resize-none bg-transparent py-1 text-[15px] text-slate-900 placeholder:text-slate-400 focus:outline-none" placeholder="Aa"></textarea>
         </div>
         <button type="submit" class="grid h-10 w-10 shrink-0 place-items-center rounded-full text-blue-500 transition hover:bg-slate-100" aria-label="Send">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21 23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
-    </form>
+    </form><div id="emoji-picker" class="absolute bottom-20 right-20 hidden w-64 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl"><div class="grid grid-cols-8 gap-2 text-xl">@foreach(['😀','😂','😍','😊','😎','🤔','😭','😡','👍','❤️','🔥','🎉','🙏','👏','💯','✅'] as $emoji)<button type="button" class="emoji-option rounded p-1 hover:bg-slate-100">{{ $emoji }}</button>@endforeach</div></div>
 @else
     <div class="grid flex-1 place-items-center px-6 text-center">
         <div>
@@ -150,11 +151,12 @@ document.addEventListener('DOMContentLoaded', function () {
     function add(m) {
         var own = Number(m.sender_id) === uid;
         if (box?.querySelector('[data-message-id="' + m.id + '"]')) return;
+        var content = (m.type === 'image' && m.file_path ? '<img src="/storage/' + encodeURIComponent(m.file_path).replace(/%2F/g, '/') + '" alt="Shared image" class="mb-2 max-h-72 rounded-xl object-cover">' : '') + (m.message ? '<p class="whitespace-pre-wrap text-[15px] leading-snug">' + esc(m.message) + '</p>' : '');
         box.insertAdjacentHTML('beforeend',
             '<div data-message-id="' + m.id + '" class="flex items-end gap-2 ' + (own ? 'justify-end' : '') + '">' +
                 '<div class="max-w-[68%]">' +
                     '<div class="rounded-[20px] px-4 py-2 ' + (own ? 'rounded-br-md bg-blue-500 text-white' : 'rounded-bl-md bg-slate-100 text-slate-900') + '">' +
-                        '<p class="whitespace-pre-wrap text-[15px] leading-snug">' + esc(m.message) + '</p>' +
+                        content +
                     '</div>' +
                     '<time class="mt-1 block px-1 text-[11px] text-slate-400 ' + (own ? 'text-right' : '') + '">now' + (own ? ' · Sent ✓' : '') + '</time>' +
                 '</div>' +
@@ -174,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form?.addEventListener('submit', async function (e) {
         e.preventDefault();
-        if (!input.value.trim()) return;
+        if (!input.value.trim() && !document.getElementById('attachment')?.files.length) return;
         var r = await fetch(form.action, {
             method: 'POST',
             body: new FormData(form),
@@ -184,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var d = await r.json();
         add(d.message);
         input.value = '';
+        document.getElementById('attachment').value = '';
         input.style.height = 'auto';
     });
 });
@@ -235,5 +238,8 @@ document.addEventListener('DOMContentLoaded',function(){var aside=document.query
 </script>
 <script>
 document.addEventListener('DOMContentLoaded',function(){var aside=document.querySelector('aside'),input=aside?.querySelector('input[placeholder="Search Messenger"]'),list=aside?.querySelector('.flex-1');if(!input||!list)return;input.addEventListener('input',function(){var query=input.value.toLowerCase().trim();list.querySelectorAll('a').forEach(function(chat){chat.classList.toggle('hidden',query!==''&&!chat.textContent.toLowerCase().includes(query))})})});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded',function(){var input=document.querySelector('#send-form textarea'),picker=document.getElementById('emoji-picker'),button=document.getElementById('emoji-button');button?.addEventListener('click',function(){picker.classList.toggle('hidden')});document.querySelectorAll('.emoji-option').forEach(function(option){option.addEventListener('click',function(){input.value+=option.textContent;input.focus();picker.classList.add('hidden')})});document.getElementById('attachment')?.addEventListener('change',function(){if(this.files[0])this.closest('form').querySelector('button[type="submit"]').title=this.files[0].name})});
 </script>
 @endsection
